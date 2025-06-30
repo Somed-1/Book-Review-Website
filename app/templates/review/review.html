@@ -1,0 +1,630 @@
+{% extends "base.html" %}
+
+{% block title %}{% if existing_review %}Edit Review{% else %}Add Review{% endif %} - {{ book.title }} - BookReview{% endblock %}
+
+{% block extra_head %}
+<style>
+  .review-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .breadcrumb {
+    margin-bottom: 2rem;
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .breadcrumb a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    text-decoration: underline;
+  }
+
+  .page-header {
+    margin-bottom: 3rem;
+  }
+
+  .page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-subtitle {
+    color: #666;
+    font-size: 1.1rem;
+  }
+
+  .review-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 3rem;
+  }
+
+  /* Book Information Panel */
+  .book-info-panel {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    height: fit-content;
+    position: sticky;
+    top: 2rem;
+  }
+
+  .panel-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .book-cover-review {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    margin-bottom: 1.5rem;
+  }
+
+  .book-title-review {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+  }
+
+  .book-author-review {
+    color: #667eea;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+  }
+
+  .book-meta-review {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+  }
+
+  .meta-icon {
+    color: #667eea;
+    width: 16px;
+  }
+
+  .meta-text {
+    color: #666;
+  }
+
+  .book-rating-review {
+    color: #ffc107;
+    font-size: 1.1rem;
+  }
+
+  /* Existing Review Alert */
+  .existing-review-alert {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+    border-left: 4px solid #ffc107;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .existing-review-alert .alert-icon {
+    color: #ffc107;
+    font-size: 1.2rem;
+  }
+
+  /* Review Form */
+  .review-form-section {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+
+  .form-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+  }
+
+  .form-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .form-body {
+    padding: 2rem;
+  }
+
+  .form-group {
+    margin-bottom: 2rem;
+  }
+
+  .form-label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #fff;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .form-control.is-invalid {
+    border-color: #dc3545;
+  }
+
+  .form-control.is-invalid:focus {
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+  }
+
+  .invalid-feedback {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    display: block;
+  }
+
+  .form-text {
+    color: #666;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+  }
+
+  .char-counter {
+    float: right;
+    font-weight: 500;
+  }
+
+  .char-counter.warning {
+    color: #ffc107;
+  }
+
+  .char-counter.danger {
+    color: #dc3545;
+  }
+
+  /* Rating Section */
+  .rating-section {
+    margin-bottom: 2rem;
+  }
+
+  .star-rating {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+
+  .star-rating input[type="radio"] {
+    display: none;
+  }
+
+  .star-rating label {
+    cursor: pointer;
+    font-size: 2rem;
+    color: #ddd;
+    transition: all 0.2s ease;
+  }
+
+  .star-rating label:hover,
+  .star-rating label:hover ~ label,
+  .star-rating input[type="radio"]:checked ~ label {
+    color: #ffc107;
+    transform: scale(1.1);
+  }
+
+  .rating-select {
+    margin-top: 1rem;
+  }
+
+  /* Form Actions */
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 2rem;
+    border-top: 1px solid #e9ecef;
+  }
+
+  .btn-cancel {
+    padding: 0.75rem 1.5rem;
+    border: 2px solid #6c757d;
+    background: transparent;
+    color: #6c757d;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-cancel:hover {
+    background: #6c757d;
+    color: white;
+  }
+
+  .btn-submit {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  }
+
+  /* Guidelines Section */
+  .guidelines-section {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+    overflow: hidden;
+  }
+
+  .guidelines-header {
+    background: #f8f9fa;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .guidelines-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .guidelines-body {
+    padding: 1.5rem;
+  }
+
+  .guidelines-list {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: #666;
+    line-height: 1.6;
+  }
+
+  .guidelines-list li {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .review-container {
+      padding: 1rem;
+    }
+
+    .review-layout {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .book-info-panel {
+      position: static;
+    }
+
+    .page-title {
+      font-size: 2rem;
+    }
+
+    .form-actions {
+      flex-direction: column;
+    }
+
+    .btn-cancel,
+    .btn-submit {
+      text-align: center;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-container">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="{{ url_for('home.home') }}">Home</a> &gt; 
+    <a href="{{ url_for('book_page.book_page', id=book.id) }}">{{ book.title }}</a> &gt;
+    <span>{% if existing_review %}Edit Review{% else %}Add Review{% endif %}</span>
+  </nav>
+
+  <!-- Page Header -->
+  <div class="page-header">
+  {# <a href="{{ url_for('review_page.add_review') }}"> #}
+    <h1 class="page-title">
+      {% if existing_review %}Edit Your Review{% else %}Write a Review{% endif %}
+    </h1>
+  </a>
+  </div>
+
+  <div class="review-layout">
+    <!-- Book Information Panel -->
+    <div class="book-info-panel">
+      <h3 class="panel-title">
+        📚 Book Details
+      </h3>
+      
+      {% if book.cover_image %}
+        <img src="{{ url_for('static', filename='uploads/covers/' ~ book.cover_image) }}" 
+             alt="{{ book.title }}" 
+             class="book-cover-review">
+      {% else %}
+        <div class="book-cover-review" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; align-items: center; justify-content: center; color: #999; font-size: 3rem;">
+          📖
+        </div>
+      {% endif %}
+      
+      <h4 class="book-title-review">{{ book.title }}</h4>
+      
+      {% if book.authors %}
+        <div class="book-author-review">
+          by {% for author in book.authors %}{{ author.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+        </div>
+      {% endif %}
+      
+      <div class="book-meta-review">
+        {% if book.publication_date %}
+          <div class="meta-row">
+            <span class="meta-icon">📅</span>
+            <span class="meta-text">{{ book.publication_date.strftime('%Y') }}</span>
+          </div>
+        {% endif %}
+        
+        {% if book.categories %}
+          <div class="meta-row">
+            <span class="meta-icon">🏷️</span>
+            <span class="meta-text">{{ book.categories[0].name }}</span>
+          </div>
+        {% endif %}
+        
+        {% if book.pages %}
+          <div class="meta-row">
+            <span class="meta-icon">📄</span>
+            <span class="meta-text">{{ book.pages }} pages</span>
+          </div>
+        {% endif %}
+        
+        {% if book.reviews and book.average_rating %}
+          <div class="meta-row">
+            <span class="meta-icon book-rating-review">
+              {% set avg_rating = book.average_rating %}
+              {% for i in range(5) %}
+                {% if i < avg_rating|round %}★{% else %}☆{% endif %}
+              {% endfor %}
+            </span>
+            <span class="meta-text">{{ "%.1f"|format(book.average_rating) }} ({{ book.reviews|length }} review{{ 's' if book.reviews|length != 1 else '' }})</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Review Form -->
+    <div>
+      {% if existing_review %}
+        <div class="existing-review-alert">
+          <span class="alert-icon">⚠️</span>
+          <div>
+            <strong>Note:</strong> You have already reviewed this book. 
+            <a href="{{ url_for('book_page.book_page', id=book.id) }}" style="color: inherit; text-decoration: underline;">View your existing review</a>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="review-form-section">
+        <div class="form-header">
+          <h2>
+            ✍️ {% if existing_review %}Update Your Review{% else %}Your Review{% endif %}
+          </h2>
+        </div>
+        
+        <div class="form-body">
+          <form method="POST" novalidate>
+            {{ form.hidden_tag() }}
+            {{ form.book_id() }}
+
+            <!-- Review Title -->
+            <div class="form-group">
+              {{ form.title.label(class="form-label") }}
+              {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+              {% if form.title.errors %}
+                {% for error in form.title.errors %}
+                  <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+              {% endif %}
+              <div class="form-text">Give your review a catchy title (optional)</div>
+            </div>
+
+            <!-- Rating -->
+            <div class="form-group rating-section">
+              {{ form.rating.label(class="form-label") }}
+              <div class="star-rating">
+                {% for value, label in form.rating.choices %}
+                  {% if value %}
+                    <input type="radio" 
+                           id="rating-{{ value }}" 
+                           name="rating" 
+                           value="{{ value }}"
+                           {% if form.rating.data == value|float %}checked{% endif %}>
+                    <label for="rating-{{ value }}" title="{{ label }}">★</label>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              <div class="rating-select">
+                <select class="form-control{% if form.rating.errors %} is-invalid{% endif %}" 
+                        name="rating" 
+                        id="rating-select">
+                  {% for value, label in form.rating.choices %}
+                    <option value="{{ value }}" 
+                            {% if form.rating.data == value|float %}selected{% endif %}>
+                      {{ label }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+              {% if form.rating.errors %}
+                {% for error in form.rating.errors %}
+                  <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+              {% endif %}
+            </div>
+
+            <!-- Review Content -->
+            <div class="form-group">
+              {{ form.content.label(class="form-label") }}
+              {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else ""), 
+                              style="min-height: 150px; resize: vertical;") }}
+              {% if form.content.errors %}
+                {% for error in form.content.errors %}
+                  <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+              {% endif %}
+              <div class="form-text">
+                Share your thoughts, opinions, and what you liked or didn't like about this book.
+                <span id="char-count" class="char-counter">0/5000 characters</span>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+              <a href="{{ url_for('book_page.book_page', id=book.id) }}" class="btn-cancel">
+                ❌ Cancel
+              </a>
+              <button type="submit" class="btn-submit">
+                💾 {% if existing_review %}Update Review{% else %}Submit Review{% endif %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Review Guidelines -->
+      <div class="guidelines-section">
+        <div class="guidelines-header">
+          <h3>
+            💡 Review Guidelines
+          </h3>
+        </div>
+        <div class="guidelines-body">
+          <ul class="guidelines-list">
+            <li>Be honest and constructive in your feedback</li>
+            <li>Avoid spoilers - other readers will appreciate it</li>
+            <li>Focus on what you liked or didn't like about the book</li>
+            <li>Keep your review respectful and appropriate</li>
+            <li>Your review will help other readers discover great books</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Character counter for review content
+    const textarea = document.getElementById('content');
+    const charCount = document.getElementById('char-count');
+    
+    if (textarea && charCount) {
+      function updateCharCount() {
+        const count = textarea.value.length;
+        charCount.textContent = count + '/5000 characters';
+        
+        // Remove existing classes
+        charCount.classList.remove('warning', 'danger');
+        
+        if (count > 4500) {
+          charCount.classList.add('warning');
+        }
+        if (count > 4800) {
+          charCount.classList.remove('warning');
+          charCount.classList.add('danger');
+        }
+      }
+      
+      textarea.addEventListener('input', updateCharCount);
+      updateCharCount(); // Initial count
+    }
+
+    // Star rating functionality
+    const starInputs = document.querySelectorAll('.star-rating input[type="radio"]');
+    const selectDropdown = document.getElementById('rating-select');
+    
+    // Sync star clicks with dropdown
+    starInputs.forEach(input => {
+      input.addEventListener('change', function() {
+        selectDropdown.value = this.value;
+      });
+    });
+    
+    // Sync dropdown with stars
+    selectDropdown.addEventListener('change', function() {
+      const correspondingRadio = document.getElementById('rating-' + this.value);
+      if (correspondingRadio) {
+        correspondingRadio.checked = true;
+      }
+    });
+  });
+</script>
+{% endblock %}

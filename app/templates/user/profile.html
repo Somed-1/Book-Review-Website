@@ -1,0 +1,529 @@
+{% extends "base.html" %} {% block title %}{{ profile_user.username }}'s Profile
+- BookReview{% endblock %} {% block extra_head %}
+<style>
+  /* Profile Page Styles */
+  .profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .profile-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3rem 2rem;
+    border-radius: 15px;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("/api/placeholder/1200/300") center/cover;
+    opacity: 0.1;
+    z-index: 0;
+  }
+
+  .profile-content {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .profile-username {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .profile-join-date {
+    font-size: 1.1rem;
+    opacity: 0.9;
+  }
+
+  .profile-stats {
+    display: flex;
+    gap: 2rem;
+    text-align: center;
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  .stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .profile-actions {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .btn-primary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-block;
+  }
+
+  .btn-primary:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-block;
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  /* Content Sections */
+  .profile-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .section-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .section-icon {
+    font-size: 1.2rem;
+  }
+
+  /* Recent Reviews */
+  .reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .review-item {
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border-left: 4px solid #667eea;
+    transition: all 0.3s ease;
+  }
+
+  .review-item:hover {
+    background: #f0f2ff;
+    border-left-color: #764ba2;
+  }
+
+  .review-book-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+
+  .review-book-title a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .review-book-title a:hover {
+    color: #667eea;
+  }
+
+  .review-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .review-stars {
+    color: #ffc107;
+    font-size: 1rem;
+  }
+
+  .review-date {
+    color: #666;
+    font-size: 0.85rem;
+  }
+
+  .review-content {
+    color: #666;
+    line-height: 1.5;
+    margin-top: 0.5rem;
+  }
+
+  /* Favorite Books */
+  .books-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+  }
+
+  .book-item {
+    text-align: center;
+  }
+
+  .book-cover-small {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .book-cover-small:hover {
+    transform: translateY(-5px);
+  }
+
+  .book-title-small {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+    margin-top: 0.5rem;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .book-title-small a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .book-title-small a:hover {
+    color: #667eea;
+  }
+
+  /* Reading Statistics */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .stat-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .stat-card-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-card-label {
+    color: #666;
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+
+  /* Empty States */
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+  }
+
+  .empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .empty-state h3 {
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .profile-sections {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .profile-container {
+      padding: 1rem;
+    }
+
+    .profile-content {
+      grid-template-columns: 1fr;
+      text-align: center;
+      gap: 1.5rem;
+    }
+
+    .profile-stats {
+      justify-content: center;
+    }
+
+    .profile-actions {
+      justify-content: center;
+    }
+
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .books-grid {
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="profile-container">
+  <!-- Profile Header -->
+  <section class="profile-header">
+    <div class="profile-content">
+      <div class="profile-avatar">{{ profile_user.username[0].upper() }}</div>
+
+      <div class="profile-info">
+        <h1 class="profile-username">{{ profile_user.username }}</h1>
+        <div class="profile-join-date">
+          Member since {{ profile_user.created_at.strftime('%B %Y') }}
+        </div>
+      </div>
+
+      <div class="profile-stats">
+        <div class="stat-item">
+          <div class="stat-number">{{ profile_user.reviews|length }}</div>
+          <div class="stat-label">Reviews</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">{{ reviewed_books_count or 0 }}</div>
+          <div class="stat-label">Books Read</div>
+        </div>
+      </div>
+
+      {% if is_own_profile %}
+      <div class="profile-actions">
+        <a href="{{ url_for('user.edit_profile') }}" class="btn-primary"
+          >Edit Profile</a
+        >
+        <a href="{{ url_for('user.settings') }}" class="btn-secondary"
+          >Settings</a
+        >
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Profile Sections -->
+  <div class="profile-sections">
+    <!-- Recent Reviews Section -->
+    <div class="section-card">
+      <h2 class="section-title">
+        <span class="section-icon">📝</span>
+        {% if is_own_profile %}Your Recent Reviews{% else %}Recent Reviews{%
+        endif %}
+      </h2>
+
+      {% if recent_reviews %}
+      <div class="reviews-list">
+        {% for review in recent_reviews %}
+        <div class="review-item">
+          <div class="review-book-title">
+            <a href="{{ url_for('book_page.book_page', id=review.book.id) }}"
+              >{{ review.book.title }}</a
+            >
+          </div>
+          <div class="review-rating">
+            <span class="review-stars">
+              {% for i in range(5) %} {% if i < review.rating %}★{% else %}☆{%
+              endif %} {% endfor %}
+            </span>
+            <span class="review-date"
+              >{{ review.created_at.strftime('%b %d, %Y') }}</span
+            >
+          </div>
+          {% if review.title %}
+          <div style="font-weight: 500; color: #333; margin-bottom: 0.5rem">
+            {{ review.title }}
+          </div>
+          {% endif %} {% if review.content %}
+          <div class="review-content">
+            {{ review.content[:150] }}{% if review.content|length > 150 %}...{%
+            endif %}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if is_own_profile and profile_user.reviews|length >
+      recent_reviews|length %}
+      <div style="text-align: center; margin-top: 1.5rem">
+        <a
+          href="{{ url_for('user.all_reviews') }}"
+          class="btn-secondary"
+          style="color: #667eea; border-color: #667eea"
+          >View All Reviews</a
+        >
+      </div>
+      {% endif %} {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">📚</div>
+        <h3>
+          {% if is_own_profile %}No reviews yet{% else %}No reviews{% endif %}
+        </h3>
+        <p>
+          {% if is_own_profile %}Start reviewing books to share your thoughts!{%
+          else %}This user hasn't written any reviews yet.{% endif %}
+        </p>
+        {% if is_own_profile %}
+        <a
+          href="{{ url_for('book.browse') }}"
+          class="btn-primary"
+          style="
+            color: #667eea;
+            background: transparent;
+            border-color: #667eea;
+            margin-top: 1rem;
+          "
+          >Browse Books</a
+        >
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Reading Statistics / Favorite Books -->
+    <div class="section-card">
+      <h2 class="section-title">
+        <span class="section-icon">📊</span>
+        {% if is_own_profile %}Your Reading Stats{% else %}Reading Activity{%
+        endif %}
+      </h2>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-number">{{ avg_rating or 0 }}</div>
+          <div class="stat-card-label">Average Rating</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-number">{{ total_reviews or 0 }}</div>
+          <div class="stat-card-label">Total Reviews</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-number">{{ reviews_this_year or 0 }}</div>
+          <div class="stat-card-label">Reviews This Year</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-number">{{ favorite_genre or 'None' }}</div>
+          <div class="stat-card-label">Favorite Genre</div>
+        </div>
+      </div>
+
+      {% if recently_reviewed_books %}
+      <div style="margin-top: 2rem">
+        <h3
+          style="
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+          "
+        >
+          {% if is_own_profile %}Recently Reviewed{% else %}Recent Books{% endif
+          %}
+        </h3>
+        <div class="books-grid">
+          {% for book in recently_reviewed_books %}
+          <div class="book-item">
+            <a href="{{ url_for('book_page.book_page', id=book.id) }}">
+              <img
+                src="{{ url_for('static', filename='uploads/covers/' ~ book.cover_image) if book.cover_image else '/api/placeholder/120/160' }}"
+                alt="{{ book.title }}"
+                class="book-cover-small"
+              />
+            </a>
+            <div class="book-title-small">
+              <a href="{{ url_for('book_page.book_page', id=book.id) }}"
+                >{{ book.title }}</a
+              >
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
