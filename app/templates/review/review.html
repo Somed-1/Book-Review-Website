@@ -108,15 +108,22 @@
   .meta-icon {
     color: #667eea;
     width: 16px;
+    flex-shrink: 0;
   }
 
   .meta-text {
     color: #666;
   }
 
+  /* FIXED: Book rating stars - now horizontal */
   .book-rating-review {
     color: #ffc107;
     font-size: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    letter-spacing: 1px;
+    line-height: 1;
   }
 
   /* Existing Review Alert */
@@ -234,8 +241,10 @@
 
   .star-rating {
     display: flex;
+    flex-direction: row-reverse;
     gap: 0.5rem;
     margin: 1rem 0;
+    justify-content: flex-end;
   }
 
   .star-rating input[type="radio"] {
@@ -249,9 +258,13 @@
     transition: all 0.2s ease;
   }
 
+  .star-rating input[type="radio"]:checked ~ label,
+  .star-rating input[type="radio"]:checked ~ label ~ label {
+    color: #ffc107;
+  }
+
   .star-rating label:hover,
-  .star-rating label:hover ~ label,
-  .star-rating input[type="radio"]:checked ~ label {
+  .star-rating label:hover ~ label {
     color: #ffc107;
     transform: scale(1.1);
   }
@@ -390,11 +403,9 @@
 
   <!-- Page Header -->
   <div class="page-header">
-  {# <a href="{{ url_for('review_page.add_review') }}"> #}
     <h1 class="page-title">
       {% if existing_review %}Edit Your Review{% else %}Write a Review{% endif %}
     </h1>
-  </a>
   </div>
 
   <div class="review-layout">
@@ -448,12 +459,12 @@
           <div class="meta-row">
             <span class="meta-icon book-rating-review">
               {% set avg_rating = book.average_rating %}
-              {% for i in range(5) %}
-                {% if i < avg_rating|round %}★{% else %}☆{% endif %}
-              {% endfor %}
+              {%- for i in range(5) -%}
+                {%- if i < avg_rating|round -%}★{%- else -%}☆{%- endif -%}
+              {%- endfor -%}
             </span>
-            <span class="meta-text">{{ "%.1f"|format(book.average_rating) }} ({{ book.reviews|length }} review{{ 's' if book.reviews|length != 1 else '' }})</span>
           </div>
+            <span class="meta-text">{{ "%.1f"|format(book.average_rating) }} ({{ book.reviews|length }} review{{ 's' if book.reviews|length != 1 else '' }})</span>
         {% endif %}
       </div>
     </div>
